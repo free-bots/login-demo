@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta
+      name="google-signin-client_id"
+      content="{{gClientID}}"
+    />
+  </head>
+  <body>
+    <h2>login demo</h2>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <a href="#" onclick="signOut();">Sign out</a>
+    <br />
+    <br />
+    <button onclick="fetchApi()">fetch secret api</button>
+  </body>
+  <script>
+    function onSignIn(googleUser) {
+      var profile = googleUser.getBasicProfile();
+      console.log("ID: " + profile.getId()); // Do not send to your backend! Use an ID token instead.
+      console.log("Name: " + profile.getName());
+      console.log("Image URL: " + profile.getImageUrl());
+      console.log("Email: " + profile.getEmail()); // This is null if the 'email' scope is not present.
+      var id_token = googleUser.getAuthResponse().id_token;
+      var token = JSON.stringify({ token: id_token });
+      console.log(token);
+      //console.log(id_token);
+      fetch("/login", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: token
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          var token = JSON.stringify(data);
+          alert(token);
+          localStorage.setItem("token", data.token);
+        })
+        .catch(err => {
+          alert(`oh no! \n ${err}`);
+        });
+    }
+    function signOut() {
+      var auth2 = gapi.auth2.getAuthInstance();
+      auth2.signOut().then(function() {
+        console.log("User signed out.");
+        localStorage.setItem("token", null);
+      });
+    }
+    function fetchApi() {
+      var token = localStorage.getItem("token");
+      if (!token) {
+        console.log("no token");
+        return;
+      }
+      console.log(`token : ${token}`);
+      fetch("/api", {
+        method: "GET",
+        headers: {
+          Authorization: `bearer ${token}`
+        }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          alert(JSON.stringify(data));
+        })
+        .catch(err => {
+          alert(`oh no! \n ${err}`);
+        });
+    }
+  </script>
+</html>
