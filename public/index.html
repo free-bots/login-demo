@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <h2>login demo</h2>
+    <a href="/google/login">G Login</a>
+    <br />
+    <br />
+    <button onclick="fetchApi()">fetch secret api</button>
+  </body>
+  <script>
+    function fetchApi() {
+      var url_path = window.location;
+      var url = new URL(url_path);
+      var token = url.searchParams.get("token");
+      if (!token) {
+        console.log("no token");
+        return;
+      }
+      console.log(`token : ${token}`);
+      fetch("/api", {
+        method: "GET",
+        headers: {
+          Authorization: `bearer ${token}`
+        }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+          alert(JSON.stringify(data));
+        })
+        .catch(err => {
+          alert(`oh no! \n ${err}`);
+        });
+    }
+  </script>
+</html>
