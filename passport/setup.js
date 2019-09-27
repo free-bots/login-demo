@@ -1,6 +1,22 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../model/user");
+const jwt = require("jsonwebtoken");
+
+const createToken = (user, done) => {
+  jwt.sign(
+    { user: user },
+    process.env.tokenSecret || "secretKey",
+    { expiresIn: "30000s" },
+    (err, token) => {
+      if (err) {
+        done(err, null);
+      } else {
+        done(null, token);
+      }
+    }
+  );
+};
 
 passport.use(
   new GoogleStrategy(
@@ -19,12 +35,14 @@ passport.use(
         .then(user => {
           if (user) {
             console.log(`user found in db ${user.toJSON()}`);
-            done(null, { id: user.id, name: user.Name });
+            createToken({ id: user.id, name: user.Name }, done);
+            //done(null, { id: user.id, name: user.Name });
           } else {
             User.create({ ProviderID: profile.id, Name: profile.displayName })
               .then(userT => {
                 console.log(`user created ${userT}`);
-                done(null, { id: userT.id, name: userT.Name });
+                createToken({ id: userT.id, name: userT.Name }, done);
+                //done(null, { id: userT.id, name: userT.Name });
               })
               .catch(err => {
                 console.log(err);
